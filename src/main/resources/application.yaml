@@ -28,7 +28,7 @@ spring:
 
 
 jwt:
-  secret-key: ${JWT_KEY}
+  secret-key: spring.project-2023.08.15.asdfgh1234!!!-spring
 
   # 30 days
-  token.expired-time-ms: ${JWT_EXPIRED_TIME_MS}
+  token.expired-time-ms: 2592000000
