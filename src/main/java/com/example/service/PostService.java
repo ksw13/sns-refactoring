@@ -40,12 +40,30 @@ public class PostService {
         );
         // 수정하려고 하는 사람이 권한이 있는 사람인지
         if(postEntity.getUser() != userEntity) {
-            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("% has no permission", userName));
+            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission", userName));
         }
 
         postEntity.setTitle(title);
         postEntity.setBody(body);
 
         return Post.fromEntity(postEntityRepository.saveAndFlush(postEntity));
+    }
+
+    @Transactional
+    public void delete(String userName, Integer postId){
+        UserEntity userEntity = userEntityRepository.findByUsername(userName).orElseThrow(() ->
+                new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
+
+        // 포스트가 존재하는지
+        PostEntity postEntity = postEntityRepository.findById(postId).orElseThrow(() ->
+                new SnsApplicationException(ErrorCode.POST_NOT_FOUND, String.format("%s not founded", postId))
+        );
+
+        // 삭제하려고 하는 사람이 권한이 있는 사람인지
+        if(postEntity.getUser() != userEntity) {
+            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission", userName));
+        }
+
+        postEntityRepository.delete(postEntity);
     }
 }

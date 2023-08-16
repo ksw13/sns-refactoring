@@ -23,8 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -132,4 +131,50 @@ public class PostControllerTest {
                 ).andDo(print())
                 .andExpect(status().isNotFound());
     }
+
+    @WithMockUser
+    @Test
+    void 포스트삭제() throws Exception {
+        // post api까지 넣어줌
+        mockMvc.perform(delete("/api/v1/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @WithAnonymousUser
+    @Test
+    void 포스트삭제시_로그인_하지_않은_경우() throws Exception {
+        // post api까지 넣어줌
+        mockMvc.perform(delete("/api/v1/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @WithMockUser
+    @Test
+    void 포스트삭제시_작성자와_요청자가_다른경우() throws Exception {
+        // return 해줄게 없으면 doThrow로 시작
+        doThrow(new SnsApplicationException(ErrorCode.INVALID_PERMISSION)).when(postService).delete(any(), any());
+
+        // post api까지 넣어줌
+        mockMvc.perform(delete("/api/v1/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @WithMockUser
+    @Test
+    void 포스트삭제시_포스트가_존재하지_않는_경우() throws Exception {
+        doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND)).when(postService).delete(any(), any());
+
+        // post api까지 넣어줌
+        mockMvc.perform(delete("/api/v1/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
 }
