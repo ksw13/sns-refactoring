@@ -3,8 +3,10 @@ package com.example.service;
 import com.example.exception.ErrorCode;
 import com.example.exception.SnsApplicationException;
 import com.example.model.Post;
+import com.example.model.entity.LikeEntity;
 import com.example.model.entity.PostEntity;
 import com.example.model.entity.UserEntity;
+import com.example.repository.LikeEntityRepository;
 import com.example.repository.PostEntityRepository;
 import com.example.repository.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,12 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class PostService {
 
     private final PostEntityRepository postEntityRepository;
     private final UserEntityRepository userEntityRepository;
+    private final LikeEntityRepository likeEntityRepository;
 
     @Transactional
     public void create(String title, String body, String userName){
@@ -79,6 +84,40 @@ public class PostService {
                 new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
 
         return postEntityRepository.findAllByUser(userEntity, pageable).map(Post::fromEntity);
+
+    }
+    @Transactional
+    public void like(Integer postId, String userName){
+        UserEntity userEntity = userEntityRepository.findByUsername(userName).orElseThrow(() ->
+                new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
+
+        // 포스트가 존재하는지
+        PostEntity postEntity = postEntityRepository.findById(postId).orElseThrow(() ->
+                new SnsApplicationException(ErrorCode.POST_NOT_FOUND, String.format("%s not founded", postId))
+        );
+
+        // 이미 like를 눌렀는지 확인
+        likeEntityRepository.findByUserAndPost(userEntity, postEntity).ifPresent(it -> {
+            throw new SnsApplicationException(ErrorCode.ALREADY_LIKE, String.format("userName : %s already liked postId : %d", userName, postId));
+        });
+
+        // like 저장
+        likeEntityRepository.save(LikeEntity.of(userEntity, postEntity));
+
+    }
+
+    @Transactional
+    public int likeCount(Integer postId){
+        // 포스트가 존재하는지
+        PostEntity postEntity = postEntityRepository.findById(postId).orElseThrow(() ->
+                new SnsApplicationException(ErrorCode.POST_NOT_FOUND, String.format("%s not founded", postId))
+        );
+
+        // 아래와 같이 요청하면 row 전체를 다 가져오기 때문에 수정필요
+        // List<PostEntity> likes = likeEntityRepository.findAllByPost(postEntity);
+        // return likes.size();
+
+        return likeEntityRepository.countByPost(postEntity);
 
     }
 }

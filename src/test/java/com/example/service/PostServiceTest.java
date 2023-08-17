@@ -4,8 +4,10 @@ import com.example.exception.ErrorCode;
 import com.example.exception.SnsApplicationException;
 import com.example.fixture.PostEntityFixture;
 import com.example.fixture.UserEntityFixture;
+import com.example.model.entity.LikeEntity;
 import com.example.model.entity.PostEntity;
 import com.example.model.entity.UserEntity;
+import com.example.repository.LikeEntityRepository;
 import com.example.repository.PostEntityRepository;
 import com.example.repository.UserEntityRepository;
 import org.junit.jupiter.api.Assertions;
@@ -32,6 +34,9 @@ public class PostServiceTest {
 
     @MockBean
     private UserEntityRepository userEntityRepository;
+
+    @MockBean
+    private LikeEntityRepository likeEntityRepository;
 
     @Test
     void 포스트작성이_정상적인_경우(){
@@ -173,6 +178,51 @@ public class PostServiceTest {
         when(postEntityRepository.findAllByUser(userEntity, pageable)).thenReturn(Page.empty());
 
         Assertions.assertDoesNotThrow(() -> postService.my("",pageable));
+    }
+
+    @Test
+    void 좋아요가_성공한_경우(){
+        Integer postId = 1;
+        String username = "username";
+        UserEntity user = mock(UserEntity.class);
+        PostEntity post = mock(PostEntity.class);
+
+        when(userEntityRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(postEntityRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(likeEntityRepository.findByUserAndPost(user,post)).thenReturn(Optional.empty());
+
+        Assertions.assertDoesNotThrow(() -> postService.like(postId,username));
+    }
+
+    @Test
+    void 좋아요시_포스트가_존재하지_않는_경우(){
+        Integer postId = 1;
+        String username = "username";
+        UserEntity user = mock(UserEntity.class);
+        PostEntity post = mock(PostEntity.class);
+
+        when(userEntityRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(postEntityRepository.findById(postId)).thenReturn(Optional.empty());
+        when(likeEntityRepository.findByUserAndPost(user,post)).thenReturn(Optional.empty());
+
+        SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> postService.like(postId,username));
+        Assertions.assertEquals(ErrorCode.POST_NOT_FOUND, e.getErrorCode());
+    }
+
+    @Test
+    void 좋아요시_이미_좋아요를_누른_경우(){
+        Integer postId = 1;
+        String username = "username";
+        UserEntity user = mock(UserEntity.class);
+        PostEntity post = mock(PostEntity.class);
+        LikeEntity like = mock(LikeEntity.class);
+
+        when(userEntityRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(postEntityRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(likeEntityRepository.findByUserAndPost(user,post)).thenReturn(Optional.of(like));
+
+        SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> postService.like(postId,username));
+        Assertions.assertEquals(ErrorCode.ALREADY_LIKE, e.getErrorCode());
     }
 
 }
