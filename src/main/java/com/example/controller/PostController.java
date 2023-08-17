@@ -7,8 +7,11 @@ import com.example.dto.response.Response;
 import com.example.model.Post;
 import com.example.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
+
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/posts")
@@ -36,5 +39,15 @@ public class PostController {
         postService.delete(authentication.getName(), postId);
 
         return Response.success();
+    }
+
+    @GetMapping
+    public Response<Page<PostResponse>> list(Pageable pageable, Authentication authentication){
+        return Response.success(postService.list(pageable).map(PostResponse::fromPost));
+    }
+
+    @GetMapping("/my")
+    public Response<Page<PostResponse>> my(Pageable pageable, Authentication authentication){
+        return Response.success(postService.my(authentication.getName(), pageable).map(PostResponse::fromPost));
     }
 }

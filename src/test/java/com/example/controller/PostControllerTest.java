@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -175,6 +176,56 @@ public class PostControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                 ).andDo(print())
                 .andExpect(status().isNotFound());
+    }
+
+    @WithMockUser
+    @Test
+    void 게시글목록() throws Exception {
+        //mocking
+        when(postService.list(any())).thenReturn(Page.empty());
+
+        // post api까지 넣어줌
+        mockMvc.perform(get("/api/v1/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @WithAnonymousUser
+    @Test
+    void 게시글목록_요청시_로그인_하지_않은_경우() throws Exception {
+        when(postService.list(any())).thenReturn(Page.empty());
+
+        // post api까지 넣어줌
+        mockMvc.perform(get("/api/v1/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @WithMockUser
+    @Test
+    void 나의_게시글목록() throws Exception {
+        //mocking
+        when(postService.my(any(), any())).thenReturn(Page.empty());
+
+        // post api까지 넣어줌
+        mockMvc.perform(get("/api/v1/posts/my")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @WithAnonymousUser
+    @Test
+    void 나의_게시글목록_요청시_로그인_하지_않은_경우() throws Exception {
+        when(postService.my(any(), any())).thenReturn(Page.empty());
+
+        // post api까지 넣어줌
+        mockMvc.perform(get("/api/v1/posts/my")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isUnauthorized());
     }
 
 }
