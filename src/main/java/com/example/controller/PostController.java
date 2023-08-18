@@ -1,7 +1,9 @@
 package com.example.controller;
 
+import com.example.dto.request.PostCommentRequest;
 import com.example.dto.request.PostCreateRequest;
 import com.example.dto.request.PostModifyRequest;
+import com.example.dto.response.CommentResponse;
 import com.example.dto.response.PostResponse;
 import com.example.dto.response.Response;
 import com.example.model.Post;
@@ -63,5 +65,17 @@ public class PostController {
         postService.likeCount(postId);
 
         return Response.success();
+    }
+
+    @PostMapping("/{postId}/comments")
+    public Response<Void> comment(@PathVariable Integer postId, @RequestBody PostCommentRequest request, Authentication authentication){
+        postService.comment(postId, authentication.getName(), request.getComment());
+
+        return Response.success();
+    }
+
+    @GetMapping("/{postId}/comments")
+    public Response<Page<CommentResponse>> getComments(@PathVariable Integer postId, Pageable pageable){
+        return Response.success(postService.getComments(postId, pageable).map(CommentResponse::fromComment));
     }
 }
