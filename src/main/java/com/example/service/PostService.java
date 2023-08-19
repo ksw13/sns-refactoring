@@ -2,16 +2,12 @@ package com.example.service;
 
 import com.example.exception.ErrorCode;
 import com.example.exception.SnsApplicationException;
+import com.example.model.AlarmArgs;
+import com.example.model.AlarmType;
 import com.example.model.Comment;
 import com.example.model.Post;
-import com.example.model.entity.CommentEntity;
-import com.example.model.entity.LikeEntity;
-import com.example.model.entity.PostEntity;
-import com.example.model.entity.UserEntity;
-import com.example.repository.CommentEntityRepository;
-import com.example.repository.LikeEntityRepository;
-import com.example.repository.PostEntityRepository;
-import com.example.repository.UserEntityRepository;
+import com.example.model.entity.*;
+import com.example.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -26,6 +22,7 @@ public class PostService {
     private final UserEntityRepository userEntityRepository;
     private final LikeEntityRepository likeEntityRepository;
     private final CommentEntityRepository commentEntityRepository;
+    private final AlarmEntityRepository alarmEntityRepository;
 
     @Transactional
     public void create(String title, String body, String userName){
@@ -106,6 +103,10 @@ public class PostService {
         // like 저장
         likeEntityRepository.save(LikeEntity.of(userEntity, postEntity));
 
+        // alarm 저장
+        alarmEntityRepository.save(AlarmEntity.of(postEntity.getUser(), AlarmType.NEW_LIKE_ON_POST, new AlarmArgs(userEntity.getId(), postEntity.getId())));
+
+
     }
 
     @Transactional
@@ -128,6 +129,11 @@ public class PostService {
         UserEntity userEntity = getUserEntityOrException(userName);
 
         commentEntityRepository.save(CommentEntity.of(userEntity, postEntity, comment));
+        // alarm 저장
+        // 알람을 받는 사람 -> 글을 게시한 사람 -> postEntity.getUser()
+        // 알람이 발생되는 주체 -> 현재 댓글을 쓰는 사람 -> userEntity.getId()
+        // 알람이 발생되는 주체 -> 현재 게시글 -> postEntity.getId()
+        alarmEntityRepository.save(AlarmEntity.of(postEntity.getUser(), AlarmType.NEW_COMMENT_ON_POST, new AlarmArgs(userEntity.getId(), postEntity.getId())));
 
     }
 
