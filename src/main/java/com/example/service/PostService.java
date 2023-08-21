@@ -70,6 +70,10 @@ public class PostService {
             throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission", userName));
         }
 
+        // 게시글과 연관된 좋아요 삭제
+        likeEntityRepository.deleteAllByPost(postEntity);
+        // 게시글과 연관된 댓글 삭제
+        commentEntityRepository.deleteAllByPost(postEntity);
         postEntityRepository.delete(postEntity);
     }
 
