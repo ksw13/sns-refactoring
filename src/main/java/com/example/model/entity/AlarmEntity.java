@@ -3,6 +3,7 @@ package com.example.model.entity;
 import com.example.model.AlarmArgs;
 import com.example.model.AlarmType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
@@ -19,7 +20,7 @@ import java.time.Instant;
 @Table(name = "\"alarm\"", indexes = {
         @Index(name = "user_id_idx", columnList = "user_id")
 })
-@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
+@TypeDef(name = "json", typeClass = JsonType.class)
 @SQLDelete(sql = "UPDATE \"alarm\" SET deleted_at = NOW() WHERE id=?")
 @Where(clause = "deleted_at is NULL")
 @Entity
@@ -36,7 +37,7 @@ public class AlarmEntity {
     @Enumerated(EnumType.STRING)
     private AlarmType alarmType;
 
-    @Type(type = "jsonb")
+    @Type(type = "json")
     @Column(columnDefinition = "json")
     private AlarmArgs args;
 

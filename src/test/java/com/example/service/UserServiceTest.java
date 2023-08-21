@@ -106,9 +106,8 @@ public class UserServiceTest {
         UserEntity user = UserEntityFixture.get(username, "", 1);
         Pageable pageable = mock(Pageable.class);
 
-        when(userEntityRepository.findByUsername(username)).thenReturn(Optional.of(user));
-        when(alarmEntityRepository.findAllByUser(user, pageable)).thenReturn(Page.empty());
+        when(alarmEntityRepository.findAllByUserId(user.getId(), pageable)).thenReturn(Page.empty());
 
-        Assertions.assertDoesNotThrow(()-> userService.alarmList(username, pageable));
+        Assertions.assertDoesNotThrow(()-> userService.alarmList(user.getId(), pageable));
     }
 }
