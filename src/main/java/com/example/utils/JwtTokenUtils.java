@@ -12,7 +12,7 @@ import java.util.Date;
 public class JwtTokenUtils {
 
     public static String getUserName(String token, String key){
-        return extractClaims(token, key).get("userName", String.class);
+        return extractClaims(token, key).get("username", String.class);
     }
 
     public static boolean isExpired(String token, String key){
@@ -23,7 +23,7 @@ public class JwtTokenUtils {
 
     public static Claims extractClaims(String token, String key){
         return Jwts.parserBuilder().setSigningKey(getKey(key))
-                .build().parseClaimsJwt(token).getBody();
+                .build().parseClaimsJws(token).getBody();
     }
 
     // key는 암호화에 사용

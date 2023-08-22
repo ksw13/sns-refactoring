@@ -8,7 +8,7 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 spring:
-  profiles.active: local
+  profiles.active: prod
 ---
 spring:
   config.activate.on-profile: local
@@ -32,3 +32,22 @@ jwt:
 
   # 30 days
   token.expired-time-ms: 2592000000
+
+---
+spring:
+  config.activate.on-profile: prod
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://sns-database:3306/sns?characterEncoding=UTF-8
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    redis:
+      host: sns-redis
+      port: 6379
+  jpa:
+    hibernate.ddl-auto: create
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MariaDBDialect
+sns:
+  base:
+    url: http://52.78.154.176/dir/

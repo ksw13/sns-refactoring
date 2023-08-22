@@ -9,6 +9,11 @@ group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
+// jar 파일 이름 변경
+bootJar {
+	archiveFileName = 'app.jar'
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
