@@ -27,19 +27,29 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private final String key;
     private final UserService userService;
 
+    private final static List<String> TOKEN_IN_PARAM_URLS = List.of("/api/v1/users/alarm/subscrible");
+
     // claims에 넣어준 username을 꺼낸 후, user가 유효한 지 검증
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // header 추출
-        final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if(header == null || !header.startsWith("Bearer ")){
-            log.error("Error occurs while getting header");
-            // filter 이어서 수행
-            filterChain.doFilter(request, response);
-            return ;
-        }
+        final String token;
+
         try{
-            final String token = header.split(" ")[1].trim();
+            if(TOKEN_IN_PARAM_URLS.contains(request.getRequestURI())){
+                token = request.getQueryString().split("#")[1].trim();
+            }
+            else{
+                final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+                if(header == null || !header.startsWith("Bearer ")){
+                    log.error("Error occurs while getting header");
+                    // filter 이어서 수행
+                    filterChain.doFilter(request, response);
+                    return ;
+                }
+                token = header.split(" ")[1].trim();
+            }
+
             // 토큰이 만료 되었는지 검사
             if(JwtTokenUtils.isExpired(token, key)){
                 log.error("key is expired");
