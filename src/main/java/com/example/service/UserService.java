@@ -7,6 +7,7 @@ import com.example.model.Alarm;
 import com.example.model.User;
 import com.example.model.entity.UserEntity;
 import com.example.repository.AlarmEntityRepository;
+import com.example.repository.UserCacheRepository;
 import com.example.repository.UserEntityRepository;
 import com.example.utils.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class UserService {
     private final AlarmEntityRepository alarmEntityRepository;
     private final UserEntityRepository userEntityRepository;
     private final BCryptPasswordEncoder encoder;
+    private final UserCacheRepository userCacheRepository;
 
     @Value("${jwt.secret-key}")
     public String secretKey;
@@ -33,8 +35,9 @@ public class UserService {
 
     // userName이 DB에 존재하는지 찾는 메소드
     public User loadUserByUserName(String userName){
-        return userEntityRepository.findByUsername(userName).map(User::fromEntity).orElseThrow(() ->
-                new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
+        return userCacheRepository.getUser(userName).orElseGet(() -> userEntityRepository.findByUsername(userName).map(User::fromEntity).orElseThrow(() ->
+                new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)))
+        );
     }
 
     @Transactional
@@ -51,11 +54,11 @@ public class UserService {
 
     public String login(String username, String password) {
         // 회원가입 여부 체크
-        UserEntity userEntity = userEntityRepository.findByUsername(username)
-                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", username)));
+        User user = loadUserByUserName(username);
+        userCacheRepository.setUser(user);
 
         // 비밀번호 체크
-        if(!encoder.matches(password, userEntity.getPassword())){
+        if(!encoder.matches(password, user.getPassword())){
             throw new SnsApplicationException(ErrorCode.INVALID_PASSWORD);
         }
 
